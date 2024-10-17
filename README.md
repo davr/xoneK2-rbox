@@ -1,6 +1,3 @@
-# ddj4deck
-python script to control 4 rekordbox decks from a ddj400 controller
-
 # xone.py
 python script to do some midi translations on a XONE K2 controller to make rekordbox understand it better (workaround for RB's limited midi mapping features).
 
@@ -43,3 +40,7 @@ python script to do some midi translations on a XONE K2 controller to make rekor
 * Implement soft-takeover for eq vs track sep knobs
 * Add some fun animations when the controller is idle (like the built-in startup animation, but continuous)
 * Add a fx type selector (re-use one of the redundant browse knobs?)
+
+# ddj4deck.py
+work-in-progress python script to control 4 rekordbox decks from a ddj400 controller
+
