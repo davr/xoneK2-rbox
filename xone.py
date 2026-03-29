@@ -427,6 +427,9 @@ def update_layer_color():
         else:
             xone.send(mido.Message(type="note_off", channel=14, note=n, velocity=0))
 
+def rboxsend(msg):
+    prn(" "*40+">>",msg," = ",msg.hex())
+    rbox.send(msg)
 
 # chan=14
 # rotary = cc
@@ -459,8 +462,7 @@ def handle_xone(msg : mido.Message):
             chan = 0 if cc == 0 else 1
             polarity = -15 if msg.value == 127 else 15
             msg = mido.Message(type="control_change", channel=chan, control=34, value=64+polarity)
-            prn(" "*40+">>",msg," = ",msg.hex())
-            rbox.send(msg)
+            rboxsend(msg)
         else:
             msg.channel = 0 if cc == 0 else 1
             cc = 0 if msg.value == 127 else 1
@@ -468,11 +470,9 @@ def handle_xone(msg : mido.Message):
             if shifted:
                 msg.channel += 4
             
-            rbox.send(msg)
-            prn(" "*40+">>",msg," = ",msg.hex())
+            rboxsend(msg)
             msg.velocity = 0
-            rbox.send(msg)
-            prn(" "*40+">>",msg," = ",msg.hex())
+            rboxsend(msg)
         return
 
     # shift + headphone 1 - swap eq knobs
@@ -507,11 +507,9 @@ def handle_xone(msg : mido.Message):
         def togglefx(c):
             msg.channel = 13 if c==2 else 14
             msg.velocity=127
-            rbox.send(msg)
-            prn(" "*40+">>",msg," = ",msg.hex())
+            rboxsend(msg)
             msg.velocity=0
-            rbox.send(msg)
-            prn(" "*40+">>",msg," = ",msg.hex())
+            rboxsend(msg)
 
         if msg.velocity > 0:
             if fxchan == 0:
@@ -560,14 +558,12 @@ def handle_xone(msg : mido.Message):
     if msg.type == "note_on" and ((msg.note >= 24 and msg.note <= 39) or msg.note==15):
         msg.channel -= l0*2
 
-    rbox.send(msg)
-    prn(" "*40+">>",msg," = ",msg.hex())
+    rboxsend(msg)
 
     # Duplicate some messages (so we can midi map to 2 commands in rbox)
     if dup:
         msg.channel-=1
-        prn(" "*40+">>",msg," = ",msg.hex())
-        rbox.send(msg)
+        rboxsend(msg)
 
 
 def recon():

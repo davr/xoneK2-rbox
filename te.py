@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+#
+# This script uses teVirtualMidi to create 2 virtual midi ports
+# porta: PIONEER DDJ-SX2 pretends to be a dj device, and connects to rekordbox software to receive messages from it
+# portb: Internal forwards the messages to a separate xone.py script, which then converts the midi messages for talking to a different controller device
+
 import ctypes
 from ctypes import *
 import time
