@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import queue
 import time
 import traceback
 import mido
@@ -134,8 +135,8 @@ def update_indicators(force=False):
         prn2(" "*40+"<<",msg," = ",msg.hex())
         xone.send(msg)
     
-    sendit(c[0], 49)
-    sendit(c[1], 50)
+    # sendit(c[0], 49)
+    # sendit(c[1], 50)
 
 
 #red + yell + green
@@ -428,7 +429,7 @@ def update_layer_color():
             xone.send(mido.Message(type="note_off", channel=14, note=n, velocity=0))
 
 def rboxsend(msg):
-    prn(" "*40+">>",msg," = ",msg.hex())
+    prn2(" "*40+">>",msg," = ",msg.hex())
     rbox.send(msg)
 
 # chan=14
@@ -616,17 +617,22 @@ def recon():
 #
 update_layer_color()
 
+outf = open("midi.log","w")
+outq = queue.Queue()
+
 def handle_xone_1(*a):
     try:
         handle_xone(*a)
     except Exception as e:
         print(e)
+    outq.put(("xone", int(time.time() * 1000), a[0]))
 
 def handle_rbox_1(*a):
     try:
         handle_rbox(*a)
     except Exception as e:
         print(e)
+    outq.put(("rbox", int(time.time() * 1000), a[0]))
 
 #rbox.callback = handle_rbox
 rbox_in.callback = handle_rbox_1
@@ -666,11 +672,16 @@ while True:
         update_indicators()
     except Exception as e:
         print(e)
+    while not outq.empty():
+        tag, ts, msg = outq.get()
+        outf.write(f"{tag},{ts},{msg}\n")
     try:
         time.sleep(0.1)
     except:
         print("Exiting")
         break
+    
+outf.close()
 rbox.close()
 rbox_in.close()
 xone.close()
