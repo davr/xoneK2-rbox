@@ -132,8 +132,7 @@ def update_indicators(force=False):
             n += 72
         t = "note_on" if v > 0 else "note_off"
         msg = mido.Message(type=t, channel=14, note=n, velocity=v)
-        prn2(" "*40+"<<",msg," = ",msg.hex())
-        xone.send(msg)
+        xonesend(msg)
     
     # sendit(c[0], 49)
     # sendit(c[1], 50)
@@ -172,10 +171,10 @@ class Deck:
             v=127
         else:
             t="note_off"
-        xone.send(mido.Message(type=t, channel=14, note=n, velocity=v))
+        xonesend(mido.Message(type=t, channel=14, note=n, velocity=v))
     def warn(self, val):
         self._warn = val
-        xone.send(mido.Message(type="note_on", channel=14, note=0x34+self._n*3, velocity=val))
+        xonesend(mido.Message(type="note_on", channel=14, note=0x34+self._n*3, velocity=val))
     #25 29 33 37
     def vu(self, val):
         self._vu = val
@@ -196,13 +195,13 @@ class Deck:
                 t = "note_off"
                 msg=mido.Message(type=t, channel=14, note=note, velocity=velocity)
                 prn(msg)
-                xone.send(msg)
+                xonesend(msg)
             elif note>0:
                 self._vu_pads[i] = 1
                 note += self._n
                 msg=mido.Message(type=t, channel=14, note=note, velocity=velocity)
                 prn(msg)
-                xone.send(msg)
+                xonesend(msg)
 
     def pos(self, val):
         self._pos = val
@@ -387,9 +386,8 @@ def handle_rbox(msg : mido.Message):
                     return
                 prn2(s2, l2, layer)
 
-    prn2(" "*20+"<<",msg," = ",msg.hex())
     try:
-        xone.send(msg)
+        xonesend(msg)
     except:
         prn("XONE exception sending")
         recon()
@@ -404,11 +402,11 @@ for c in 11,12,13,14:
 # Whenever we change layers, update all the button lights to their cached state
 def update_layer_color():
     if layer == HOTCUE:
-        xone.send(mido.Message(type="note_on", channel=14, note=0x0f))
+        xonesend(mido.Message(type="note_on", channel=14, note=0x0f))
     elif layer == BEATLOOP:
-        xone.send(mido.Message(type="note_on", channel=14, note=0x13))
+        xonesend(mido.Message(type="note_on", channel=14, note=0x13))
     elif layer == BEATJUMP:
-        xone.send(mido.Message(type="note_on", channel=14, note=0x17))
+        xonesend(mido.Message(type="note_on", channel=14, note=0x17))
 
     # if VU overrides hotcue, dont update
     if VU_ON == VU_ALWAYS: return
@@ -424,13 +422,19 @@ def update_layer_color():
             if layer == HOTCUE:#backwards
                 n += 72
             v = 127
-            xone.send(mido.Message(type="note_on", channel=14, note=n, velocity=v))
+            xonesend(mido.Message(type="note_on", channel=14, note=n, velocity=v))
         else:
-            xone.send(mido.Message(type="note_off", channel=14, note=n, velocity=0))
+            xonesend(mido.Message(type="note_off", channel=14, note=n, velocity=0))
 
 def rboxsend(msg):
     prn2(" "*40+">>",msg," = ",msg.hex())
     rbox.send(msg)
+    outq.put((">rbox", int(time.time() * 1000), msg))
+
+def xonesend(msg):
+    prn2(" "*40+"<<",msg," = ",msg.hex())
+    xone.send(msg)
+    outq.put((">xone", int(time.time() * 1000), msg))
 
 # chan=14
 # rotary = cc
@@ -447,7 +451,7 @@ def handle_xone(msg : mido.Message):
     # Handle Shift key internally
     if msg.type in ["note_on","note_off"] and msg.channel == 14 and msg.note == 12:
         shift = msg.velocity == 127
-        xone.send(msg)
+        xonesend(msg)
         return
 
     # Handle encoders, convert them to quick button presses
@@ -534,8 +538,7 @@ def handle_xone(msg : mido.Message):
             msg.channel = 14
             msg.note += (fxchan-1)*36
             msg.velocity=127
-            xone.send(msg)
-            prn(" "*40+"<<",msg," = ",msg.hex())
+            xonesend(msg)
 
         return
 
@@ -615,10 +618,9 @@ def recon():
 #t = Thread(target=loop, daemon=True)
 #t.start()
 #
-update_layer_color()
-
 outf = open("midi.log","w")
 outq = queue.Queue()
+update_layer_color()
 
 def handle_xone_1(*a):
     try:
@@ -644,7 +646,7 @@ while True:
         tt += 1
         if tt > 20:
             tt = 0
-            xone.send(ping)
+            xonesend(ping)
     except Exception as e:
         print(e)
         recon()
