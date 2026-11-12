@@ -10,6 +10,15 @@ python script to do some midi translations on a XONE K2 controller to make rekor
 6. Delete all existing mappings (might not be needed?)
 7. Import "PIONEER DDJ-SX.csv"
 
+### Windows & Rekordbox 6 / 7 Setup (LED Feedback Fix)
+In Rekordbox 6+, standard MIDI LED feedback is blocked on virtual ports named `PIONEER DDJ-SX2`, while jogwheels only work under that native name. To get **both jogwheels and full LED feedback** working simultaneously:
+
+1. Run `te.py` and `xone.py` as usual (`te.py` will automatically create three virtual ports: `PIONEER DDJ-SX2`, `Internal`, and `XONE-LED`).
+2. Open Rekordbox **MIDI** settings:
+   - Select **`PIONEER DDJ-SX2`** and click **IMPORT** to load `PIONEER DDJ-SX2.csv` (handles all controls and jogwheels).
+   - Select **`XONE-LED`** and click **IMPORT** to load the same `PIONEER DDJ-SX2.csv` (handles LED feedback).
+   - Leave **`Internal`** unmapped.
+
 ## Mapping:
 
 * When two options A/B given, B is the shift feature.
